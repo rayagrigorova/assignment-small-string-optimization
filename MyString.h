@@ -11,22 +11,22 @@ class MyString
 {
 	// This type of string will be used if the length of the string is more than 14 bytes
 	struct longStr {
-		char* _data; // 8 bytes for a 64-bit computer
+		char* _data; // 8 bytes (for a 64-bit computer)
 		uint32_t _length; // 4 bytes 
-
 		// The last bit of capacity will be used to indicate whether we are using the small or the big string. 
 		// Otherwise, it would be impossible to tell. 
-		// The last bit of _capacity will be '1' if longStr is used, and '0' if smallStr is used
+		// The most significant bit of _capacity will be '1' if longStr is used, and '0' if smallStr is used
 		// The maximal length of the string is reduced from 4 294 967 295 to 2 147 483 647 characters.
 		uint32_t _capacity; // 4 bytes
 	};
 
 	// This type of string will be used if the length of the string is less than or equal to 14 bytes
 	struct shortStr {
-		char _data[MAX_SIZE_BYTES]; // 15 bytes
+		char _data[MAX_SIZE_BYTES]; // 15 bytes (but 14 will be used because of '\0')
 
 		// A number between 0 and 255 is big enough to represent the size of the smaller string 
 		// In this case, shortStr can be between 0 and 15 bytes 
+	   // The last bit will be used to indicate whether we are using the small or the big string.
 		unsigned char _length; // 1 byte
 	};
 
@@ -44,8 +44,9 @@ class MyString
 	void copyToLongStr(const char* data);
 
 	bool isLongStr() const; // This will return true if the long string is in use
-	void setToLongStrType(); // Once the small string becomes too small, switch to the bigger one
-	void setFlag();
+	void switchToLongStr(); // Once the small string becomes too small, switch to the bigger one
+	void setFlag(); // Set the bit indicating that longStr is being used
+	void unsetFlag(); // Unset the bit indicating that longStr is being used
 
 	uint32_t capacity() const;
 

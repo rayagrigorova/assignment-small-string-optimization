@@ -1,11 +1,17 @@
 #include "MyString.h"
 
-const uint32_t MASK = 1;
+#pragma warning(disable : 4996)
+
+const unsigned char MASK1 = 1;
+const unsigned char MASK2 = (UCHAR_MAX << 1); // 11111110
+
+const uint32_t MASK3 = (1 << 31); // 100000...000
 
 namespace {
+
 	// Source: https://www.techiedelight.com/round-next-highest-power-2/
-	uint32_t findNextPowerOf2(uint32_t n)
-	{
+
+	uint32_t findNextPowerOf2(uint32_t n) {
 		// Handle the case when n is a power of 2. 
 		// I chose to increment it so that numbers close to a power of two are rounded up
 		// This way, findNextPowerOf2(15) will return 32 for example.
@@ -22,18 +28,17 @@ namespace {
 }
 
 bool MyString::isLongStr() const {
-	// This will return true if the last bit of _capacity is set to 1
-	return l._capacity & MASK;
+	// This will return true if the last bit is set to 1
+	return s._length & MASK1;
 }
 
-MyString::MyString(uint32_t capacity)
-{
+MyString::MyString(uint32_t capacity) {
 	// The small string can't be used and memory allocation is necessary
-	if (capacity > MAX_SIZE_BYTES) {
-		l._length = capacity - 1;
+	if (capacity >= MAX_SIZE_BYTES) {
+		l._length = 0;
 		l._capacity = findNextPowerOf2(capacity);
-		l._data = new char[l._capacity];
-		setToLongStrType();
+		l._data = new char[l._capacity + 1];
+		setFlag();
 	}
 
 	else {
@@ -44,6 +49,8 @@ MyString::MyString(uint32_t capacity)
 void MyString::copyToSmallStr(const char* data) {
 	strcpy(s._data, data);
 	s._length = strlen(data);
+	// Make place for the flag bit
+	s._length <<= 1;
 }
 
 void MyString::copyToLongStr(const char* data) {
@@ -51,8 +58,7 @@ void MyString::copyToLongStr(const char* data) {
 	l._length = strlen(data);
 }
 
-MyString operator+(const MyString& lhs, const MyString& rhs)
-{
+MyString operator+(const MyString& lhs, const MyString& rhs) {
 	MyString result(lhs.length() + rhs.length());
 
 	result[0] = '\0';
@@ -70,35 +76,38 @@ MyString operator+(const MyString& lhs, const MyString& rhs)
 	return result;
 }
 
-MyString& MyString::operator+=(const MyString& other)
-{
+MyString& MyString::operator+=(const MyString& other) {
 	if (other.length() + length() >= capacity()) {
-		setToLongStrType();
-		strcat(l._data, other.l._data);
+		if (!isLongStr()) {
+			switchToLongStr();
+		}
+
 		resize();
+		strcat(l._data, other.l._data);
+		l._length += other.l._length;
 	}
 
 	else {
 		if (isLongStr()) {
-			strcpy(l._data, other.l._data);
+			strcat(l._data, other.l._data);
+			l._length += other.l._length;
 		}
 		else {
-			copyToSmallStr(other.s._data);
+			strcat(s._data, other.s._data);
+			s._length += other.s._length;
 		}
 	}
 
 	return *this;
 }
 
-MyString::MyString() 
-{
+MyString::MyString() {
 	// No need to allocate memory dynamically 
 	s._data[0] = '\0';
 	s._length = 0;
 }
 
-MyString::MyString(const char* data) : MyString(strlen(data) + 1)
-{
+MyString::MyString(const char* data) : MyString(strlen(data) + 1) {
 	// MyString allocated on the heap
 	if (isLongStr()) {
 		copyToLongStr(data);
@@ -109,24 +118,19 @@ MyString::MyString(const char* data) : MyString(strlen(data) + 1)
 	}
 }
 
-MyString::MyString(const MyString& other)
-{
+MyString::MyString(const MyString& other) {
 	copyFrom(other);
 }
 
-MyString& MyString::operator=(const MyString& other)
-{
-	if (this != &other)
-	{
+MyString& MyString::operator=(const MyString& other) {
+	if (this != &other) {
 		free();
 		copyFrom(other);
 	}
 	return *this;
 }
 
-
-void MyString::free()
-{
+void MyString::free() {
 	if (isLongStr()) {
 		delete[] l._data;
 	}
@@ -135,112 +139,110 @@ void MyString::free()
 	l._length = l._capacity = 0;
 }
 
-MyString::~MyString()
-{
+MyString::~MyString() {
 	free();
 }
 
 void MyString::resize() {
-	l._capacity = (l._capacity >> 1);
+	// Remove the flag
+	s._length &= MASK2;
 	l._capacity *= 2;
-	setToLongStrType();
 
-	char* newData = new char[l._capacity];
+	char* newData = new char[l._capacity + 1];
+
+	// Add the flag back
+	setFlag();
+
 	strcpy(newData, l._data);
 
 	delete[] l._data;
 	l._data = newData;
 }
 
-uint32_t MyString::length() const
-{
-	return isLongStr() ? l._length : s._length;
+uint32_t MyString::length() const {
+	return isLongStr() ? l._length : s._length >> 1;
 }
 
-void MyString::copyFrom(const MyString& other)
-{
+void MyString::copyFrom(const MyString& other) {
 	if (other.isLongStr()) {
 		l._capacity = other.l._capacity;
-		l._data = new char[l._capacity + 1];
+		l._data = new char[capacity() + 1];
 		copyToLongStr(other.l._data);
+		setFlag();
 	}
 
 	else {
 		copyToSmallStr(other.s._data);
+		unsetFlag();
 	}
 }
 
-void MyString::setToLongStrType() {
+void MyString::switchToLongStr() {
 	if (isLongStr()) {
 		return;
 	}
 
 	// First, save the data from the smaller string
 	// This is necessary, because memory is shared between the two strings
-	uint32_t newLen = s._length;
+	uint32_t newLen = s._length >> 1;
 	uint32_t newCap = findNextPowerOf2(newLen);
-	char* newData = new char[newCap];
+	char* newData = new char[newCap + 1];
 	strcpy(newData, s._data);
 
 	l._capacity = newCap;
 	l._length = newLen;
 	l._data = newData;
-
 	setFlag();
 }
 
 uint32_t MyString::capacity() const {
-	return isLongStr() ? l._capacity : MAX_SIZE_BYTES;
+	return isLongStr() ? l._capacity ^ MASK3 : MAX_SIZE_BYTES;
 }
 
-char& MyString::operator[](size_t index) 
-{
+char& MyString::operator[](size_t index) {
 	return isLongStr() ? l._data[index] : s._data[index];
 }
 
-char MyString::operator[](size_t index) const 
-{
+char MyString::operator[](size_t index) const {
 	return isLongStr() ? l._data[index] : s._data[index];
 }
 
-MyString MyString::substr(size_t begin, size_t howMany) const
-{
-	if (begin + howMany > length())
+MyString MyString::substr(size_t begin, size_t howMany) const {
+	if (begin + howMany > length()) {
 		throw std::length_error("Error, Substr out of range");
-
+	}
 
 	MyString res(howMany + 1);
+	const char* ptr = c_str();
 
-	if (isLongStr()) {
-		for (int i = 0; i < howMany; i++)
-			res.l._data[i] = l._data[begin + i];
+	if (res.isLongStr()) {
+		for (int i = 0; i < howMany; i++) {
+			res.l._data[i] = ptr[begin + i];
+		}
 	}
 
 	else {
-		for (int i = 0; i < howMany; i++)
-			res.s._data[i] = s._data[begin + i];
+		for (int i = 0; i < howMany; i++) {
+			res.s._data[i] = ptr[begin + i];
+		}
 	}
 
 	res[howMany] = '\0';
 	return res;
 }
 
-const char* MyString::c_str() const
-{
+const char* MyString::c_str() const {
 	return isLongStr() ? l._data : s._data;
 }
 
-std::ostream& operator<<(std::ostream& os, const MyString& str)
-{
+std::ostream& operator<<(std::ostream& os, const MyString& str) {
 	return os << str.c_str();
 }
 
-std::istream& operator>>(std::istream& is, MyString& str)
-{
+std::istream& operator>>(std::istream& is, MyString& str) {
 	char buff[1024];
 	is >> buff; 
 	size_t len = strlen(buff);
-
 
 	// I am not using the copyToSmallStr and copyToLongStr functions here
 	// because they will recalculate the size of the buffer, which is unnecessary.
@@ -252,16 +254,23 @@ std::istream& operator>>(std::istream& is, MyString& str)
 		str.l._capacity = findNextPowerOf2(len);
 		str.l._data = new char[str.l._capacity + 1];
 		strcpy(str.l._data, buff);
+		str.setFlag();
 	}
 
 	else {
 		strcpy(str.s._data, buff);
 		str.s._length = len;
+		str.unsetFlag();
 	}
 	return is;
 }
 
 void MyString::setFlag() {
-	l._capacity |= MASK;
+	s._length |= MASK1;
 }
+
+void MyString::unsetFlag() {
+	s._length &= MASK2;
+}
+
 
