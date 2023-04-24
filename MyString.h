@@ -22,7 +22,7 @@ class MyString
 
 	// This type of string will be used if the length of the string is less than or equal to 14 bytes
 	struct shortStr {
-		char _data[MAX_SIZE_BYTES]; // 15 bytes (but 14 will be used because of '\0')
+		char _data[MAX_SIZE_BYTES]; // 15 bytes 
 
 		// A number between 0 and 255 is big enough to represent the size of the smaller string 
 		// In this case, shortStr can be between 0 and 15 bytes 
