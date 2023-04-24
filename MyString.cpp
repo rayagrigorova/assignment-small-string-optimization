@@ -34,7 +34,7 @@ bool MyString::isLongStr() const {
 
 MyString::MyString(uint32_t capacity) {
 	// The small string can't be used and memory allocation is necessary
-	if (capacity >= MAX_SIZE_BYTES) {
+	if (capacity > MAX_SIZE_BYTES) {
 		l._length = 0;
 		l._capacity = findNextPowerOf2(capacity);
 		l._data = new char[l._capacity + 1];
@@ -59,18 +59,23 @@ void MyString::copyToLongStr(const char* data) {
 }
 
 MyString operator+(const MyString& lhs, const MyString& rhs) {
-	MyString result(lhs.length() + rhs.length());
+	int lhsLen = lhs.length();
+	int rhsLen = rhs.length();
+
+	MyString result( lhsLen + rhsLen );
 
 	result[0] = '\0';
 
 	if (result.isLongStr()) {
 		strcat(result.l._data, lhs.c_str());
 		strcat(result.l._data, rhs.c_str());
+		result.l._length = lhsLen + rhsLen;
 	}
 
 	else {
 		strcat(result.s._data, lhs.c_str());
 		strcat(result.s._data, rhs.c_str());
+		result.s._length = lhsLen + rhsLen;
 	}
 
 	return result;
@@ -83,18 +88,18 @@ MyString& MyString::operator+=(const MyString& other) {
 		}
 
 		resize();
-		strcat(l._data, other.l._data);
-		l._length += other.l._length;
+		strcat(l._data, other.c_str());
+		l._length += other.length();
 	}
 
 	else {
 		if (isLongStr()) {
-			strcat(l._data, other.l._data);
-			l._length += other.l._length;
+			strcat(l._data, other.c_str());
+			l._length += other.length();
 		}
 		else {
-			strcat(s._data, other.s._data);
-			s._length += other.s._length;
+			strcat(s._data, other.c_str());
+			s._length += other.length();
 		}
 	}
 
@@ -160,13 +165,13 @@ void MyString::resize() {
 }
 
 uint32_t MyString::length() const {
-	return isLongStr() ? l._length : s._length >> 1;
+	return isLongStr() ? l._length : s._length;
 }
 
 void MyString::copyFrom(const MyString& other) {
 	if (other.isLongStr()) {
 		l._capacity = other.l._capacity;
-		l._data = new char[capacity() + 1];
+		l._data = new char[l._capacity + 1];
 		copyToLongStr(other.l._data);
 		setFlag();
 	}
@@ -196,6 +201,8 @@ void MyString::switchToLongStr() {
 }
 
 uint32_t MyString::capacity() const {
+	// MASK3 = 100000...000
+	// This will set the '1' bit that shows that longStr is being used to 0. 
 	return isLongStr() ? l._capacity ^ MASK3 : MAX_SIZE_BYTES;
 }
 
@@ -219,12 +226,14 @@ MyString MyString::substr(size_t begin, size_t howMany) const {
 		for (int i = 0; i < howMany; i++) {
 			res.l._data[i] = ptr[begin + i];
 		}
+		res.l._length = howMany;
 	}
 
 	else {
 		for (int i = 0; i < howMany; i++) {
 			res.s._data[i] = ptr[begin + i];
 		}
+		res.s._length = howMany;
 	}
 
 	res[howMany] = '\0';
@@ -250,6 +259,7 @@ std::istream& operator>>(std::istream& is, MyString& str) {
 		if (str.isLongStr()) {
 			delete[] str.l._data;
 		}
+
 		str.l._length = len;
 		str.l._capacity = findNextPowerOf2(len);
 		str.l._data = new char[str.l._capacity + 1];
