@@ -290,7 +290,7 @@ std::istream& operator>>(std::istream& is, MyString& str) {
 	else {
 		strcpy(str.s._data, buff);
 		str.setShortStringLength(len);
-		str.unsetFlag();
+		//str.unsetFlag();
 	}
 	return is;
 }
