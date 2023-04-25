@@ -2,10 +2,10 @@
 
 #pragma warning(disable : 4996)
 
-const unsigned char MASK1 = 1;
-const unsigned char MASK2 = (UCHAR_MAX << 1); // 11111110
+const unsigned char MASK = 1; // This mask will be used to set and unset the flag
+//const unsigned char MASK2 = (UCHAR_MAX << 1); // 11111110, used for removing the flag 
 
-const uint32_t MASK3 = (1 << 31); // 100000...000
+//const uint32_t MASK3 = (1 << 31); // 100000...000
 
 namespace {
 
@@ -29,7 +29,7 @@ namespace {
 
 bool MyString::isLongStr() const {
 	// This will return true if the last bit is set to 1
-	return s._length & MASK1;
+	return s._length & MASK;
 }
 
 MyString::MyString(uint32_t capacity) {
@@ -38,10 +38,10 @@ MyString::MyString(uint32_t capacity) {
 		l._length = 0;
 
 		l._capacity = findNextPowerOf2(capacity);
-		l._capacity <<= 1; // Shift left so that the last bit is used as a flag
 
 		l._data = new char[l._capacity + 1];
 
+		l._capacity <<= 1; // Shift left so that the last bit is used as a flag
 		setFlag();
 	}
 
@@ -54,7 +54,7 @@ void MyString::copyToSmallStr(const char* data) {
 	strcpy(s._data, data);
 	s._length = strlen(data);
 
-	// Make place for the flag bit
+	// Make place for the flag bit	
 	s._length <<= 1;
 }
 
@@ -129,6 +129,7 @@ MyString::MyString(const char* data) : MyString(strlen(data) + 1) {
 	// MyString allocated on the heap
 	if (isLongStr()) {
 		copyToLongStr(data);
+		
 	}
 
 	else {
@@ -163,13 +164,12 @@ MyString::~MyString() {
 
 void MyString::resize() {
 	// Remove the flag
-	s._length &= MASK2;
+	s._length ^= MASK;
 	l._capacity >>= 1;
 	l._capacity *= 2;
 
 	char* newData = new char[l._capacity + 1];
 
-	// Add the flag back
 	l._capacity <<= 1;
 	setFlag();
 
@@ -188,6 +188,7 @@ void MyString::copyFrom(const MyString& other) {
 		l._capacity = other.l._capacity;
 		l._data = new char[l._capacity + 1];
 		copyToLongStr(other.l._data);
+	
 		l._capacity <<= 1;
 		setFlag();
 	}
@@ -213,13 +214,13 @@ void MyString::switchToLongStr(int totalLen) {
 	l._capacity = (newCap << 1);
 	l._length = newLen;
 	l._data = newData;
+
 	setFlag();
 }
 
 uint32_t MyString::capacity() const {
-	// MASK3 = 100000...000
 	// This will set the '1' bit that shows that longStr is being used to 0. 
-	return isLongStr() ? (l._capacity ^ MASK1) >> 1 : MAX_SIZE_BYTES;
+	return isLongStr() ? (l._capacity ^ MASK) >> 1 : MAX_SIZE_BYTES;
 }
 
 char& MyString::operator[](size_t index) {
@@ -278,8 +279,10 @@ std::istream& operator>>(std::istream& is, MyString& str) {
 
 		str.l._length = len;
 		str.l._capacity = findNextPowerOf2(len);
+
 		str.l._data = new char[str.l._capacity + 1];
 		strcpy(str.l._data, buff);
+
 		str.l._capacity <<= 1;
 		str.setFlag();
 	}
@@ -293,11 +296,11 @@ std::istream& operator>>(std::istream& is, MyString& str) {
 }
 
 void MyString::setFlag() {
-	s._length |= MASK1;
+	s._length |= MASK;
 }
 
 void MyString::unsetFlag() {
-	s._length &= MASK2;
+	s._length ^= MASK;
 }
 
 

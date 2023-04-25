@@ -4,7 +4,7 @@
 // Sources used:
 //https://github.com/Angeld55/Object-oriented_programming_FMI/tree/master/Week%2008
 //https://github.com/elliotgoodrich/SSO-23
-
+ 
 const int MAX_SIZE_BYTES = 15;
 
 class MyString
@@ -13,14 +13,14 @@ class MyString
 	struct longStr {
 		char* _data; // 8 bytes (for a 64-bit computer)
 		uint32_t _length; // 4 bytes 
+
 		// The last bit of capacity will be used to indicate whether we are using the small or the big string. 
-		// Otherwise, it would be impossible to tell. 
 		// The maximal length of the string is reduced from 4 294 967 295 to 2 147 483 647 characters.
 		uint32_t _capacity; // 4 bytes
 	};
 
 	// This type of string will be used if the length of the string is less than or equal to 14 bytes
-	// The small string will be null-terminated to make printing and copying easier. 
+	// The small string will be null-terminated to make operations such as printing, concatenation and copying easier. 
 	struct shortStr {
 		char _data[MAX_SIZE_BYTES]; // 15 bytes 
 
@@ -36,6 +36,7 @@ class MyString
 		shortStr s;
 	};
 
+	// If the longStr is used, heap memory will be allocated. 
 	void copyFrom(const MyString& data);
 	void free();
 	void resize();
@@ -43,21 +44,26 @@ class MyString
 	void copyToSmallStr(const char* data);
 	void copyToLongStr(const char* data);
 
-	// TotalLen shows the total length of the strings 
-	// The switch between strings is done when concatenating. 
+	// The switch between strings is done when concatenating.
+	// TotalLen is the total length of the two strings.
 	void switchToLongStr(int totalLen); // Once the small string becomes too small, switch to the bigger one
-	void setFlag(); // Set the bit indicating that longStr is being used
+
+	//void setFlag(); // Set the bit indicating that longStr is being used
+	//void unsetFlag(); // Unset the bit indicating that longStr is being used
+
+	void setFlag(); // Set the bit indicating that longStr is being used	
 	void unsetFlag(); // Unset the bit indicating that longStr is being used
 
-	uint32_t capacity() const;
+	uint32_t capacity() const; // returns the capacity of the string 
 
-	void setShortStringLength(const unsigned char len);
+	void setShortStringLength(const unsigned char len); // The flag should be removed and added again
 
 	explicit MyString(uint32_t capacity); 
 
 public:
 	MyString(const char* data);
 
+	// Big 4
 	MyString();
 	MyString(const MyString& other);
 	MyString& operator=(const MyString& other);
@@ -78,6 +84,7 @@ public:
 	friend std::istream& operator>>(std::istream&, MyString& str);
 	friend std::ostream& operator<<(std::ostream& os, const MyString& str);
 
+	// This function is only used in main() to show how the string flag changes for different strings. 
 	bool isLongStr() const; // This will return true if the long string is in use
 };
 
