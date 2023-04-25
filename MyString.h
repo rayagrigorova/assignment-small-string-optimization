@@ -13,7 +13,7 @@ class MyString
 	struct longStr {
 		char* _data; // 8 bytes (for a 64-bit computer)
 		uint32_t _length; // 4 bytes 
-		// The first bit of capacity will be used to indicate whether we are using the small or the big string. 
+		// The last bit of capacity will be used to indicate whether we are using the small or the big string. 
 		// Otherwise, it would be impossible to tell. 
 		// The maximal length of the string is reduced from 4 294 967 295 to 2 147 483 647 characters.
 		uint32_t _capacity; // 4 bytes
@@ -48,6 +48,8 @@ class MyString
 	void unsetFlag(); // Unset the bit indicating that longStr is being used
 
 	uint32_t capacity() const;
+
+	void setShortStringLength(const unsigned char len);
 
 	explicit MyString(uint32_t capacity); 
 

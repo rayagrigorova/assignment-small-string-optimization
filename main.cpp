@@ -23,12 +23,12 @@ int main() {
     std::cout << s3.isLongStr() << std::endl; // true
     std::cout << std::endl;
 
-    //s1 += s3;
-    //MyString s4(s1); // "Hello, world! Long string hhndjhnsjjsdjskdjjsds"
-    //std::cout << s4 << std::endl;
-    //std::cout << "Length: " << s4.length() << std::endl;
-    //std::cout << s4.isLongStr() << std::endl; // true
-    //std::cout << std::endl;
+    s1 += s3;
+    MyString s4(s1); // "Hello, world! Long string hhndjhnsjjsdjskdjjsds"
+    std::cout << s4 << std::endl;
+    std::cout << "Length: " << s4.length() << std::endl;
+    std::cout << s4.isLongStr() << std::endl; // true
+    std::cout << std::endl;
 
     MyString s5(s3.substr(5, 6)); // "string"
     std::cout << s5 << std::endl;

@@ -36,8 +36,12 @@ MyString::MyString(uint32_t capacity) {
 	// The small string can't be used and memory allocation is necessary
 	if (capacity > MAX_SIZE_BYTES) {
 		l._length = 0;
+
 		l._capacity = findNextPowerOf2(capacity);
+		l._capacity <<= 1; // Shift left so that the last bit is used as a flag
+
 		l._data = new char[l._capacity + 1];
+
 		setFlag();
 	}
 
@@ -49,6 +53,7 @@ MyString::MyString(uint32_t capacity) {
 void MyString::copyToSmallStr(const char* data) {
 	strcpy(s._data, data);
 	s._length = strlen(data);
+
 	// Make place for the flag bit
 	s._length <<= 1;
 }
@@ -75,10 +80,15 @@ MyString operator+(const MyString& lhs, const MyString& rhs) {
 	else {
 		strcat(result.s._data, lhs.c_str());
 		strcat(result.s._data, rhs.c_str());
-		result.s._length = lhsLen + rhsLen;
+		result.setShortStringLength(lhsLen + rhsLen);
 	}
 
 	return result;
+}
+
+void MyString::setShortStringLength(const unsigned char len) {
+	s._length = len; // add the  two numbers 
+	s._length <<= 1; // add the flag back 
 }
 
 MyString& MyString::operator+=(const MyString& other) {
@@ -99,7 +109,7 @@ MyString& MyString::operator+=(const MyString& other) {
 		}
 		else {
 			strcat(s._data, other.c_str());
-			s._length += other.length();
+			setShortStringLength(length() + other.length());
 		}
 	}
 
@@ -151,11 +161,13 @@ MyString::~MyString() {
 void MyString::resize() {
 	// Remove the flag
 	s._length &= MASK2;
+	l._capacity >>= 1;
 	l._capacity *= 2;
 
 	char* newData = new char[l._capacity + 1];
 
 	// Add the flag back
+	l._capacity <<= 1;
 	setFlag();
 
 	strcpy(newData, l._data);
@@ -165,7 +177,7 @@ void MyString::resize() {
 }
 
 uint32_t MyString::length() const {
-	return isLongStr() ? l._length : s._length;
+	return isLongStr() ? l._length : s._length >> 1;
 }
 
 void MyString::copyFrom(const MyString& other) {
@@ -173,6 +185,7 @@ void MyString::copyFrom(const MyString& other) {
 		l._capacity = other.l._capacity;
 		l._data = new char[l._capacity + 1];
 		copyToLongStr(other.l._data);
+		l._capacity <<= 1;
 		setFlag();
 	}
 
@@ -189,12 +202,12 @@ void MyString::switchToLongStr() {
 
 	// First, save the data from the smaller string
 	// This is necessary, because memory is shared between the two strings
-	uint32_t newLen = s._length >> 1;
+	uint32_t newLen = length();
 	uint32_t newCap = findNextPowerOf2(newLen);
 	char* newData = new char[newCap + 1];
 	strcpy(newData, s._data);
 
-	l._capacity = newCap;
+	l._capacity = (newCap << 1);
 	l._length = newLen;
 	l._data = newData;
 	setFlag();
@@ -203,7 +216,7 @@ void MyString::switchToLongStr() {
 uint32_t MyString::capacity() const {
 	// MASK3 = 100000...000
 	// This will set the '1' bit that shows that longStr is being used to 0. 
-	return isLongStr() ? l._capacity ^ MASK3 : MAX_SIZE_BYTES;
+	return isLongStr() ? (l._capacity ^ MASK1) >> 1 : MAX_SIZE_BYTES;
 }
 
 char& MyString::operator[](size_t index) {
@@ -233,7 +246,7 @@ MyString MyString::substr(size_t begin, size_t howMany) const {
 		for (int i = 0; i < howMany; i++) {
 			res.s._data[i] = ptr[begin + i];
 		}
-		res.s._length = howMany;
+		res.setShortStringLength(howMany);
 	}
 
 	res[howMany] = '\0';
@@ -264,12 +277,13 @@ std::istream& operator>>(std::istream& is, MyString& str) {
 		str.l._capacity = findNextPowerOf2(len);
 		str.l._data = new char[str.l._capacity + 1];
 		strcpy(str.l._data, buff);
+		str.l._capacity <<= 1;
 		str.setFlag();
 	}
 
 	else {
 		strcpy(str.s._data, buff);
-		str.s._length = len;
+		str.setShortStringLength(len);
 		str.unsetFlag();
 	}
 	return is;
