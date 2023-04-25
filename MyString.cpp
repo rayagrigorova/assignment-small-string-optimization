@@ -92,24 +92,27 @@ void MyString::setShortStringLength(const unsigned char len) {
 }
 
 MyString& MyString::operator+=(const MyString& other) {
-	if (other.length() + length() >= capacity()) {
+	uint32_t otherLen = other.length(); 
+	uint32_t thisLen = length();
+
+	if ( otherLen + thisLen >= capacity()) {
 		if (!isLongStr()) {
-			switchToLongStr();
+			switchToLongStr(otherLen + thisLen);
 		}
 
 		resize();
 		strcat(l._data, other.c_str());
-		l._length += other.length();
+		l._length += otherLen;
 	}
 
 	else {
 		if (isLongStr()) {
 			strcat(l._data, other.c_str());
-			l._length += other.length();
+			l._length += otherLen;
 		}
 		else {
 			strcat(s._data, other.c_str());
-			setShortStringLength(length() + other.length());
+			setShortStringLength(otherLen + thisLen);
 		}
 	}
 
@@ -195,7 +198,7 @@ void MyString::copyFrom(const MyString& other) {
 	}
 }
 
-void MyString::switchToLongStr() {
+void MyString::switchToLongStr(int totalLen) {
 	if (isLongStr()) {
 		return;
 	}
@@ -203,7 +206,7 @@ void MyString::switchToLongStr() {
 	// First, save the data from the smaller string
 	// This is necessary, because memory is shared between the two strings
 	uint32_t newLen = length();
-	uint32_t newCap = findNextPowerOf2(newLen);
+	uint32_t newCap = findNextPowerOf2(totalLen);
 	char* newData = new char[newCap + 1];
 	strcpy(newData, s._data);
 

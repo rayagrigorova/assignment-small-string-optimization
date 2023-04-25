@@ -43,7 +43,9 @@ class MyString
 	void copyToSmallStr(const char* data);
 	void copyToLongStr(const char* data);
 
-	void switchToLongStr(); // Once the small string becomes too small, switch to the bigger one
+	// TotalLen shows the total length of the strings 
+	// The switch between strings is done when concatenating. 
+	void switchToLongStr(int totalLen); // Once the small string becomes too small, switch to the bigger one
 	void setFlag(); // Set the bit indicating that longStr is being used
 	void unsetFlag(); // Unset the bit indicating that longStr is being used
 
