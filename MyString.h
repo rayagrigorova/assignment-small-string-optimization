@@ -48,9 +48,6 @@ class MyString
 	// TotalLen is the total length of the two strings.
 	void switchToLongStr(int totalLen); // Once the small string becomes too small, switch to the bigger one
 
-	//void setFlag(); // Set the bit indicating that longStr is being used
-	//void unsetFlag(); // Unset the bit indicating that longStr is being used
-
 	void setFlag(); // Set the bit indicating that longStr is being used	
 	void unsetFlag(); // Unset the bit indicating that longStr is being used
 

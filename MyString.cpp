@@ -3,9 +3,6 @@
 #pragma warning(disable : 4996)
 
 const unsigned char MASK = 1; // This mask will be used to set and unset the flag
-//const unsigned char MASK2 = (UCHAR_MAX << 1); // 11111110, used for removing the flag 
-
-//const uint32_t MASK3 = (1 << 31); // 100000...000
 
 namespace {
 
@@ -87,7 +84,7 @@ MyString operator+(const MyString& lhs, const MyString& rhs) {
 }
 
 void MyString::setShortStringLength(const unsigned char len) {
-	s._length = len; // add the  two numbers 
+	s._length = len;
 	s._length <<= 1; // add the flag back 
 }
 
@@ -95,7 +92,9 @@ MyString& MyString::operator+=(const MyString& other) {
 	uint32_t otherLen = other.length(); 
 	uint32_t thisLen = length();
 
-	if ( otherLen + thisLen >= capacity()) {
+	// The small string can't be resized 
+	// Switch to long string (if not already in use)
+	if ( otherLen + thisLen >= capacity()) { 
 		if (!isLongStr()) {
 			switchToLongStr(otherLen + thisLen);
 		}
@@ -163,8 +162,7 @@ MyString::~MyString() {
 }
 
 void MyString::resize() {
-	// Remove the flag
-	s._length ^= MASK;
+	unsetFlag();
 	l._capacity >>= 1;
 	l._capacity *= 2;
 
@@ -219,8 +217,7 @@ void MyString::switchToLongStr(int totalLen) {
 }
 
 uint32_t MyString::capacity() const {
-	// This will set the '1' bit that shows that longStr is being used to 0. 
-	return isLongStr() ? (l._capacity ^ MASK) >> 1 : MAX_SIZE_BYTES;
+	return isLongStr() ? l._capacity >> 1 : MAX_SIZE_BYTES;
 }
 
 char& MyString::operator[](size_t index) {
@@ -272,7 +269,7 @@ std::istream& operator>>(std::istream& is, MyString& str) {
 
 	// I am not using the copyToSmallStr and copyToLongStr functions here
 	// because they will recalculate the size of the buffer, which is unnecessary.
-	if (len > MAX_SIZE_BYTES) {
+	if (len >= MAX_SIZE_BYTES) {
 		if (str.isLongStr()) {
 			delete[] str.l._data;
 		}
@@ -290,7 +287,6 @@ std::istream& operator>>(std::istream& is, MyString& str) {
 	else {
 		strcpy(str.s._data, buff);
 		str.setShortStringLength(len);
-		//str.unsetFlag();
 	}
 	return is;
 }
