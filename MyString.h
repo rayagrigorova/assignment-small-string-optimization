@@ -24,9 +24,9 @@ class MyString
 	struct shortStr {
 		char _data[MAX_SIZE_BYTES]; // 15 bytes 
 
-		// A number between 0 and 255 is big enough to represent the size of the smaller string 
-		// In this case, shortStr can be between 0 and 14 bytes 
-	   // The last bit will be used to indicate whether we are using the small or the big string.
+	// The last bit will be used to indicate whether we are using the small or the big string.
+	// A number between 0 and 127 is big enough to represent the size of the smaller string 
+	// In this case, shortStr can be between 0 and 14 bytes 
 		unsigned char _length; // 1 byte
 	};
 
@@ -44,16 +44,21 @@ class MyString
 	void copyToSmallStr(const char* data);
 	void copyToLongStr(const char* data);
 
+	void initSmallStr(const char* data, uint32_t len);
+	void initLongStr(const char* data, uint32_t len);
+
 	// The switch between strings is done when concatenating.
 	// TotalLen is the total length of the two strings.
 	void switchToLongStr(int totalLen); // Once the small string becomes too small, switch to the bigger one
 
 	void setFlag(); // Set the bit indicating that longStr is being used	
 	void unsetFlag(); // Unset the bit indicating that longStr is being used
+	// These two functions can be united in one - changeFlag(), but having seperate ones 
+	// makes the code more readable. 
 
 	uint32_t capacity() const; // returns the capacity of the string 
 
-	void setShortStringLength(const unsigned char len); // The flag should be removed and added again
+	void setShortStringLength(const unsigned char len); // The length should be changed and shifted left
 
 	explicit MyString(uint32_t capacity); 
 
@@ -81,7 +86,7 @@ public:
 	friend std::istream& operator>>(std::istream&, MyString& str);
 	friend std::ostream& operator<<(std::ostream& os, const MyString& str);
 
-	// This function is only used in main() to show how the string flag changes for different strings. 
+	// This function is only used in main() to show how the flag changes for different strings. 
 	bool isLongStr() const; // This will return true if the long string is in use
 };
 
