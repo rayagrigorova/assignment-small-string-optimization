@@ -24,9 +24,9 @@ class MyString
 	struct shortStr {
 		char _data[MAX_SIZE_BYTES]; // 15 bytes 
 
-	// The last bit will be used to indicate whether we are using the small or the big string.
-	// A number between 0 and 127 is big enough to represent the size of the smaller string 
-	// In this case, shortStr can be between 0 and 14 bytes 
+	// The last bit will indicate whether the small or the big string is being used. 
+	// (the maximal number that can be stored in the unsigned char is reduced to 127)
+	// A number between 0 and 127 is big enough to represent the size of the smaller string (between 0 and 14)
 		unsigned char _length; // 1 byte
 	};
 
@@ -53,10 +53,10 @@ class MyString
 
 	void setFlag(); // Set the bit indicating that longStr is being used	
 	void unsetFlag(); // Unset the bit indicating that longStr is being used
-	// These two functions can be united in one - changeFlag(), but having seperate ones 
+	// These two functions can be united in one - changeFlag(), but having separate ones 
 	// makes the code more readable. 
 
-	uint32_t capacity() const; // returns the capacity of the string 
+	uint32_t capacity() const; 
 
 	void setShortStringLength(const unsigned char len); // The length should be changed and shifted left
 

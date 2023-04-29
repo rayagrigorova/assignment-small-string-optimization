@@ -14,7 +14,7 @@ int main() {
     s1 += s2; 
     std::cout << s1 << std::endl; // Hello, world!
     std::cout << "Length: " << s1.length() << std::endl; // 13
-    std::cout << "Is long string: " << s1.isLongStr() << std::endl; // false, "Hello, world!" is 13 characters 
+    std::cout << "Is long string: " << s1.isLongStr() << std::endl; // false 
     std::cout << std::endl;
 
     MyString s3("Long string hhndjhnsjjsdjskdjjsds");
@@ -43,19 +43,19 @@ int main() {
     std::cout << "Is long string: " << s6.isLongStr() << std::endl; // true or false, depends on user input 
     std::cout << std::endl;
 
-    s1 = "12312341526124"; // 14
-    s3 = s1; // 12312341526124
-    std::cout << s3 << std::endl;
+    s1 = "12312341526124"; 
+    s3 = s1; 
+    std::cout << s3 << std::endl; // 12312341526124
     std::cout << "Length: " << s3.length() << std::endl; // 14
     std::cout << "Is long string: " << s3.isLongStr() << std::endl; // false
     std::cout << std::endl;
 
     MyString s7("hsjhsfjsdfddjd"); 
-    std::cout << s7 << std::endl;
+    std::cout << s7 << std::endl; // hsjhsfjsdfddjd
     std::cout << "Length: " << s7.length() << std::endl; // 14 
     std::cout << "Is long string: " << s7.isLongStr() << std::endl; // false
     s7 += "1";
-    std::cout << s7 << std::endl;
+    std::cout << s7 << std::endl; // hsjhsfjsdfddjd1
     std::cout << "Length: " << s7.length() << std::endl; // 15
     std::cout << "Is long string: " << s7.isLongStr() << std::endl; // true
 }

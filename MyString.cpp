@@ -22,7 +22,7 @@ namespace {
 }
 
 bool MyString::isLongStr() const {
-	// This will return true if the last bit is set to 1
+	// This will return true if the last bit of s._length is set to 1
 	return s._length & MASK;
 }
 
@@ -61,17 +61,20 @@ MyString operator+(const MyString& lhs, const MyString& rhs) {
 
 	result[0] = '\0';
 
-	if (result.isLongStr()) {
-		strcat(result.l._data, lhs.c_str());
-		strcat(result.l._data, rhs.c_str());
+	bool isLong = result.isLongStr(); 
+
+	char* dataPtr = isLong ? result.l._data : result.s._data;
+	strcat(dataPtr, lhs.c_str());
+	strcat(dataPtr, rhs.c_str());
+
+	if (isLong) {
 		result.l._length = lhsLen + rhsLen;
 	}
 
 	else {
-		strcat(result.s._data, lhs.c_str());
-		strcat(result.s._data, rhs.c_str());
 		result.setShortStringLength(lhsLen + rhsLen);
 	}
+
 	return result;
 }
 
@@ -83,14 +86,14 @@ void MyString::setShortStringLength(const unsigned char len) {
 MyString& MyString::operator+=(const MyString& other) {
 	uint32_t otherLen = other.length(); 
 	uint32_t thisLen = length();
+	bool isLong = isLongStr();
 
 	// The small string can't be resized 
 	// Switch to long string (if not already in use)
 	if ( otherLen + thisLen >= capacity()) { 
-
 		// Move the data from the small string to the big one
 		// The capacity will be set to a value big enough to contain both strings.
-		if (!isLongStr()) {
+		if (!isLong) {
 			switchToLongStr(otherLen + thisLen);
 		}
 
@@ -103,12 +106,14 @@ MyString& MyString::operator+=(const MyString& other) {
 	}
 
 	else {
-		if (isLongStr()) {
-			strcat(l._data, other.c_str());
+		char* dataPtr = isLong ? l._data : s._data;
+		strcat(dataPtr, other.c_str());
+
+		if(isLong){
 			l._length += otherLen;
 		}
+
 		else {
-			strcat(s._data, other.c_str());
 			setShortStringLength(otherLen + thisLen);
 		}
 	}
@@ -123,7 +128,6 @@ MyString::MyString() {
 }
 
 MyString::MyString(const char* data) : MyString(strlen(data) + 1) {
-	// MyString allocated on the heap
 	if (isLongStr()) {
 		copyToLongStr(data);
 	}
@@ -263,8 +267,6 @@ std::istream& operator>>(std::istream& is, MyString& str) {
 	is >> buff; 
 	size_t len = strlen(buff);
 
-	// I am not using the copyToSmallStr and copyToLongStr functions here
-	// because they will recalculate the size of the buffer, which is unnecessary.
 	if (len >= MAX_SIZE_BYTES) {
 		if (str.isLongStr()) {
 			delete[] str.l._data;
